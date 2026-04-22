@@ -14,10 +14,12 @@ if (!ADMIN_SECRET) {
   process.exit(1);
 }
 
-const PRODUCTS_PATH  = join(__dirname, "public", "products.json");
-const SETTINGS_PATH  = join(__dirname, "public", "settings.json");
-const IMAGES_PATH    = join(__dirname, "public", "images");
-const PORT = 3001;
+const isProd = process.env.NODE_ENV === "production";
+const PUBLIC_DIR     = isProd ? join(__dirname, "dist") : join(__dirname, "public");
+const PRODUCTS_PATH  = join(PUBLIC_DIR, "products.json");
+const SETTINGS_PATH  = join(PUBLIC_DIR, "settings.json");
+const IMAGES_PATH    = join(PUBLIC_DIR, "images");
+const PORT = process.env.PORT || 3001;
 
 const TG_BOT_TOKEN = process.env.TG_BOT_TOKEN;
 const TG_CHAT_ID   = process.env.TG_CHAT_ID;
@@ -153,8 +155,30 @@ createServer(async (req, res) => {
     return;
   }
 
-  res.writeHead(404);
-  res.end();
+  // Роздача статичних файлів сайту (Фронтенду)
+  try {
+    let cleanUrl = req.url.split("?")[0].replace(/\.\./g, "");
+    if (cleanUrl === "/") cleanUrl = "/index.html";
+    
+    const filePath = join(PUBLIC_DIR, cleanUrl);
+    const ext = extname(filePath).toLowerCase();
+    const mimeTypes = {
+      ".html": "text/html", ".js": "text/javascript", ".css": "text/css",
+      ".json": "application/json", ".png": "image/png", ".jpg": "image/jpeg",
+      ".webp": "image/webp", ".svg": "image/svg+xml", ".ico": "image/x-icon"
+    };
+    const content = await readFile(filePath);
+    res.writeHead(200, { "Content-Type": mimeTypes[ext] || "application/octet-stream" });
+    res.end(content);
+  } catch (e) {
+    try {
+      const index = await readFile(join(PUBLIC_DIR, "index.html"));
+      res.writeHead(200, { "Content-Type": "text/html" });
+      res.end(index);
+    } catch (err) {
+      res.writeHead(404); res.end("Not Found");
+    }
+  }
 })
 .on("error", (err) => {
   if (err.code === "EADDRINUSE") {
