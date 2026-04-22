@@ -1,0 +1,25 @@
+.layout {
+  display: flex;
+  max-width: 1440px;
+  margin: 0 auto;
+  min-height: calc(100vh - var(--header-h));
+}
+.overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.42);
+  backdrop-filter: blur(3px);
+  z-index: 90;
+  animation: fadeIn 0.2s;
+  touch-action: none;
+  overscroll-behavior: none;
+}
+
+@media (max-width: 768px) {
+  html, body { overflow-x: hidden; max-width: 100vw; }
+  .app { overflow-x: hidden; }
+  .overlay { display: block; }
+  body.menu-open { overflow: hidden; position: fixed; width: 100%; }
+  body.menu-open .layout { z-index: 105; } /* Піднімаємо меню та затемнення над шапкою (100) */
+}

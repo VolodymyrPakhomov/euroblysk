@@ -1,0 +1,166 @@
+@import "./styles/variables.css";
+@import "./styles/bubbles.css";
+@import "./styles/header.css";
+@import "./styles/layout.css";
+@import "./styles/sidebar.css";
+@import "./styles/catalog.css";
+@import "./styles/card.css";
+@import "./styles/cart.css";
+@import "./styles/modal.css";
+@import "./styles/hero.css";
+@import "./styles/footer.css";
+@import "./styles/admin.css";
+
+/* Плавне з'явлення картинок (Fade-in) */
+.card-img {
+  opacity: 0;
+  transition: opacity 0.5s ease-in-out;
+}
+.card-img.loaded {
+  opacity: 1;
+}
+
+/* Анімація успішного додавання в кошик */
+.add-cart-btn {
+  transition: all 0.2s ease;
+}
+.add-cart-btn.added-success {
+  background-color: #28a745 !important; /* Зелений колір успіху */
+  color: white !important;
+  transform: scale(1.05);
+}
+
+/* Кнопка "Вгору" */
+.scroll-top-btn {
+  position: fixed;
+  bottom: 30px;
+  right: 30px;
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  background: #3b82f6; /* Синій колір, замініть на свій основний колір (var(--primary)) якщо треба */
+  color: white;
+  border: none;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+  z-index: 999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.2s ease, background 0.2s ease;
+}
+.scroll-top-btn:hover {
+  transform: translateY(-4px);
+  background: #2563eb;
+}
+
+/* Умная шапка (Smart Header) */
+.header {
+  position: sticky;
+  top: 0;
+  background: rgba(255, 255, 255, 0.85) !important;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  transition: transform 0.3s ease-in-out;
+  z-index: 100;
+}
+.header--hidden {
+  transform: translateY(-100%);
+}
+
+/* Плавающая корзина для мобильных */
+.mobile-sticky-cart {
+  display: none; /* Скрыта на десктопах */
+}
+@media (max-width: 768px) {
+  .layout {
+    padding-bottom: 70px; /* Отступ, чтобы корзина не перекрывала товары */
+  }
+  .mobile-sticky-cart {
+    display: flex;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: rgba(255, 255, 255, 0.85);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    padding: 12px 16px;
+    box-shadow: 0 -4px 16px rgba(0, 0, 0, 0.1);
+    z-index: 99;
+    justify-content: space-between;
+    align-items: center;
+    cursor: pointer;
+    animation: slideUpCart 0.3s ease-out;
+  }
+  .sticky-cart-info {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-weight: 600;
+    color: #333;
+  }
+  .sticky-cart-btn {
+    background: #2563eb; /* Основной синий */
+    color: white;
+    border: none;
+    padding: 8px 18px;
+    border-radius: 8px;
+    font-weight: 600;
+    pointer-events: none; /* Клик ловится родительским div */
+  }
+  @keyframes slideUpCart {
+    from { transform: translateY(100%); }
+    to { transform: translateY(0); }
+  }
+}
+
+/* Анимация пульсации корзины при попадании товара */
+@keyframes cartBump {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.15); }
+  100% { transform: scale(1); }
+}
+.cart-bump {
+  animation: cartBump 0.3s ease-out;
+}
+
+/* Товар "Немає в наявності" */
+.out-of-stock .card-img-wrap {
+  filter: grayscale(100%);
+  opacity: 0.55;
+}
+.out-of-stock .card-title,
+.out-of-stock .card-price {
+  opacity: 0.55;
+}
+.out-of-stock .add-cart-btn {
+  background-color: #e5e7eb !important;
+  color: #9ca3af !important;
+  cursor: not-allowed !important;
+  transform: none !important;
+}
+
+/* Hover-ефекти для карток (Тактильність) */
+.card {
+  transition: transform 0.3s ease, box-shadow 0.3s ease !important;
+}
+@media (hover: hover) {
+  .card:not(.out-of-stock):hover {
+    transform: translateY(-6px) !important;
+    box-shadow: 0 14px 28px rgba(0, 0, 0, 0.1) !important;
+  }
+}
+
+/* Оформлення підзаголовків у вигляді "пігулок" (Pills) */
+.card-subtitle,
+.card-tag {
+  display: inline-block !important;
+  background-color: #f0f5ff !important;
+  color: #2563eb !important;
+  padding: 4px 10px !important;
+  border-radius: 999px !important;
+  font-size: 12px !important;
+  font-weight: 600 !important;
+  margin: 4px 0 8px 0 !important;
+}
