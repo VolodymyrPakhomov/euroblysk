@@ -155,9 +155,71 @@ createServer(async (req, res) => {
     return;
   }
 
+  let cleanUrl = req.url.split("?")[0].replace(/\.\./g, "");
+
+  // Генерація XML-фіду для Google Merchant Center
+  if (req.method === "GET" && cleanUrl === "/feed.xml") {
+    try {
+      const rawData = await readFile(PRODUCTS_PATH, "utf-8");
+      const data = JSON.parse(rawData);
+      
+      // Підтримка як формату 1C-Bitrix (tales_feed), так і звичайного масиву
+      const offers = data.shop && data.shop.offers ? data.shop.offers : data;
+      
+      // Автоматично визначаємо ваш домен (наприклад, https://euroblysk.onrender.com)
+      const protocol = req.headers["x-forwarded-proto"] || "https";
+      const host = req.headers.host || "euroblysk.com.ua";
+      const baseUrl = `${protocol}://${host}`;
+      
+      let xml = `<?xml version="1.0" encoding="UTF-8"?>\n`;
+      xml += `<rss xmlns:g="http://base.google.com/ns/1.0" version="2.0">\n`;
+      xml += `  <channel>\n`;
+      xml += `    <title>EuroBlysk</title>\n`;
+      xml += `    <link>${baseUrl}</link>\n`;
+      xml += `    <description>Каталог жіночого одягу</description>\n`;
+      
+      for (const item of offers) {
+        const id = item.id || item.model || Math.random().toString(36).substr(2, 9);
+        // Google вимагає екранувати спецсимволи
+        const title = (item.name || "Товар").replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        const description = (item.description || title).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        const link = `${baseUrl}/product/${id}`; // Пряме посилання на товар
+        const imageLink = (item.pictures && item.pictures[0]) ? item.pictures[0] : `${baseUrl}/default-image.jpg`;
+        const price = item.price ? `${item.price} UAH` : "0 UAH";
+        const brand = (item.params && item.params['Бренд']) ? item.params['Бренд'] : "EuroBlysk";
+        const availability = (item.available !== false) ? "in_stock" : "out_of_stock";
+        
+        xml += `    <item>\n`;
+        xml += `      <g:id>${id}</g:id>\n`;
+        xml += `      <g:title>${title}</g:title>\n`;
+        xml += `      <g:description>${description}</g:description>\n`;
+        xml += `      <g:link>${link}</g:link>\n`;
+        xml += `      <g:image_link>${imageLink}</g:image_link>\n`;
+        xml += `      <g:condition>new</g:condition>\n`;
+        xml += `      <g:availability>${availability}</g:availability>\n`;
+        xml += `      <g:price>${price}</g:price>\n`;
+        xml += `      <g:brand>${brand}</g:brand>\n`;
+        if (item.model) xml += `      <g:mpn>${item.model}</g:mpn>\n`;
+        if (item.color) xml += `      <g:color>${item.color}</g:color>\n`;
+        xml += `    </item>\n`;
+      }
+      
+      xml += `  </channel>\n`;
+      xml += `</rss>`;
+      
+      res.writeHead(200, { "Content-Type": "application/xml; charset=utf-8" });
+      res.end(xml);
+      return;
+    } catch (e) {
+      console.error("Помилка генерації фіду:", e);
+      res.writeHead(500);
+      res.end("Internal Server Error");
+      return;
+    }
+  }
+
   // Роздача статичних файлів сайту (Фронтенду)
   try {
-    let cleanUrl = req.url.split("?")[0].replace(/\.\./g, "");
     if (cleanUrl === "/") cleanUrl = "/index.html";
     
     const filePath = join(PUBLIC_DIR, cleanUrl);
